@@ -62,14 +62,14 @@ def login():
         conn.close()
         
         if matching_password is None:
-            print("Username does not exist")
             return render_template("login.html")
         stored_password = matching_password[0]
         if hashed_password != stored_password:
-            print("Passwords do not match")
             return render_template("login.html")
         session['logged_in'] = True
-        print(session)
+        update_login_count(username)
+        if get_login_count == 1:
+            return redirect(url_for("reset"))
         return redirect(url_for("index"))
         
     return render_template("login.html")
