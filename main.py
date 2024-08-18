@@ -100,9 +100,9 @@ def index():
         details = result[2:]
         qn_mark = []
         for i in range(0, len(details) ,3):
-            maximum = details[3*i]
-            scored = details[3*i+1]
-            comment = details[3*i+2]
+            maximum = details[i]
+            scored = details[i+1]
+            comment = details[i+2]
             maximum_total += maximum
             total += scored
             qn_mark.append(scored)
@@ -117,9 +117,9 @@ def index():
                         marks_lost[topic] = (maximum - scored)
                     else:
                         marks_lost[topic] += (maximum - scored)
-        indiv_qn_marks.append("qn_mark")
+        indiv_qn_marks.append(qn_mark)
     indiv_qn_scores = [sum(mark) for mark in indiv_qn_marks]
-    marks_lost = dict(sorted(marks_lost.items(), key=lambda item: item[1], reverse=True))
+    marks_lost = dict(list(sorted(marks_lost.items(), key=lambda item: item[1], reverse=True)))
     if len(marks_lost) > 5:
         marks_lost = marks_lost[:5]
     return render_template("index.html",marks_lost=marks_lost,careless=careless,unattempted=unattempted,total=total,maximum_total=maximum_total,indiv_qn_marks=indiv_qn_marks,indiv_qn_scores=indiv_qn_scores)
@@ -154,7 +154,7 @@ def login():
             return render_template("login.html")
         session['logged_in'] = True
         update_login_count("school.db",username)
-        if get_login_count == 1:
+        if get_login_count(username) == 1:
             return redirect(url_for("reset"))
         return redirect(url_for("index"))
         
@@ -189,7 +189,7 @@ def change():
         confirm_password = request.form.get("firstpassword2")
 
         if new_password != confirm_password:
-            return render_template("change_password.html")
+            return render_template("change.html")
 
         hashed_password = hash_password(new_password)
         username = session.get('username')
