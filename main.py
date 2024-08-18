@@ -34,26 +34,6 @@ def hash_password(password): # converts password to sha256
     sha256_hash.update(password_bytes)
     return sha256_hash.hexdigest()
 
-def acceptable_password(password):
-    digits = 0
-    letters = 0
-    special = 0
-    if len(password) < 8:
-        return False
-
-    for i in range(len(password)):
-        if password[i].isdigit():
-            digits += 1
-        elif password[i].isalpha():
-            letters += 1
-        else:
-            special += 1
-
-    if digits == 0 or letters == 0 or special == 0:
-        return False
-    else:
-        return True
-
 def get_login_count(username):
     conn = sqlite3.connect('school.db')
     cursor = conn.cursor()
@@ -126,15 +106,6 @@ def index():
 
 @app.route('/login', methods=["GET","POST"])
 def login():
-    # Obtains usernames and password to check
-    sql_query = "SELECT username, passkey FROM LoginDetails"
-    conn = sqlite3.connect('school.db')
-    cursor = conn.cursor()
-    cursor.execute(sql_query)
-    login_details = cursor.fetchall()
-    login_details = list(login_details)
-    username_list = [detail[0] for detail in login_details]
-    conn.close()
     # checks the details entered
     if request.method == "POST":
         username = request.form.get("username")
@@ -153,9 +124,11 @@ def login():
         if hashed_password != stored_password:
             return render_template("login.html")
         session['logged_in'] = True
+        session['username'] = username
         update_login_count("school.db",username)
         if get_login_count(username) == 1:
-            return redirect(url_for("reset"))
+            return redirect(url_for("change"))
+            
         return redirect(url_for("index"))
         
     return render_template("login.html")
