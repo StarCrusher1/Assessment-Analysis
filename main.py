@@ -54,6 +54,35 @@ def acceptable_password(password):
     else:
         return True
 
+def get_login_count(username):
+    conn = sqlite3.connect('school.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT login_count FROM LoginDetails WHERE username=?", (username,))
+    login_count = cursor.fetchone()
+    conn.close()
+    if login_count:
+        return login_count[0]
+    return None
+
+def update_login_count(db_path, username):
+    # Connect to the SQLite database
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # Check if user exists
+    cursor.execute("SELECT login_count FROM LoginDetails WHERE username = ?", (username,))
+    result = cursor.fetchone()
+
+    if result is not None:
+        # User exists, increment the login count
+        current_count = result[0] if result[0] is not None else 0
+        new_count = current_count + 1
+        cursor.execute("UPDATE LoginDetails SET login_count = ? WHERE username = ?", (new_count, username))
+
+    # Commit the changes and close the connection
+    conn.commit()
+    conn.close()
+
 @app.route('/', methods=["GET","POST"])
 def index():
     if not session.get('logged_in'):
@@ -124,7 +153,7 @@ def login():
         if hashed_password != stored_password:
             return render_template("login.html")
         session['logged_in'] = True
-        update_login_count(username)
+        update_login_count("school.db",username)
         if get_login_count == 1:
             return redirect(url_for("reset"))
         return redirect(url_for("index"))
