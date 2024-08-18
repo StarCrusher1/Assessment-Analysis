@@ -26,8 +26,6 @@ def get_subtable_info(db_path, username):
         results.extend(rows)
 
     conn.close()
-    print(username)
-    print(results)
     return results
 
 def hash_password(password): # converts password to sha256
@@ -105,18 +103,17 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         hashed_password = hash_password(password)
-
         conn = sqlite3.connect('school.db')
         cursor = conn.cursor()
+        if any(x is None for x in [username, password]):
+            print("Missing password or username")
+            return render_template("login.html")
         check_query = cursor.execute("SELECT passkey FROM LoginDetails WHERE username=?", (username,))
         matching_password = cursor.fetchone()
         conn.close()
-        print(matching_password)
         if matching_password is None:
             return render_template("login.html")
         stored_password = matching_password[0]
-        print(hashed_password)
-        print(stored_password)
         if str(hashed_password) != str(stored_password):
             return render_template("login.html")
         session['logged_in'] = True
