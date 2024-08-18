@@ -7,5 +7,24 @@
   </head>
   <body>
     <h1>Results Analysis</h1>
+    <hr>
+    <p>Your Score: {{ total }}/{{ maximum_total }}</p>
+    <hr>
+    <h2>Marks Lost</h2>
+    <p>Careless mistakes: {{ careless }}</p>
+    <p>Unattempted questions: {{ unattempted }}</p>
+    <ul>
+      {% for key, value in marks_lost.items() %}
+        <li>{{ key }}: {{ value }}</li>
+      {% endfor %}
+    </ul>
+    {% for i in range(indiv_qn_scores | length) %}
+      <h3>Question {{ i+1 }}: {{indiv_qn_scores[i]}}</h3>
+      <ul>
+        {% for part in (indiv_qn_marks[i]) %}
+          <li>{{ part }}</li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
   </body>
 </html>

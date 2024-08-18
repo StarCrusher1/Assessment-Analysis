@@ -71,13 +71,13 @@ def index():
         details = result[2:]
         qn_mark = []
         for i in range(0, len(details) ,3):
-            maximum = details[3i]
-            scored = details[3i+1]
-            comment = details[3i+2]
+            maximum = details[3*i]
+            scored = details[3*i+1]
+            comment = details[3*i+2]
             maximum_total += maximum
             total += scored
             qn_mark.append(scored)
-            if comment not None:
+            if comment != None:
                 if comment == "careless":
                     careless += (maximum - scored)
                 else:
@@ -91,6 +91,8 @@ def index():
         indiv_qn_marks.append("qn_mark")
     indiv_qn_scores = [sum(mark) for mark in indiv_qn_marks]
     marks_lost = dict(sorted(marks_lost.items(), key=lambda item: item[1], reverse=True))
+    if len(marks_lost) > 5:
+        marks_lost = marks_lost[:5]
     return render_template("index.html",marks_lost=marks_lost,careless=careless,unattempted=unattempted,total=total,maximum_total=maximum_total,indiv_qn_marks=indiv_qn_marks,indiv_qn_scores=indiv_qn_scores)
 
 @app.route('/login', methods=["GET","POST"])
