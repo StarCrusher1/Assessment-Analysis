@@ -26,6 +26,8 @@ def get_subtable_info(db_path, username):
         results.extend(rows)
 
     conn.close()
+    print(username)
+    print(results)
     return results
 
 def hash_password(password): # converts password to sha256
@@ -45,23 +47,15 @@ def get_login_count(username):
     return None
 
 def update_login_count(db_path, username):
-    # Connect to the SQLite database
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect('school.db')
     cursor = conn.cursor()
-
-    # Check if user exists
-    cursor.execute("SELECT logins FROM LoginDetails WHERE username = ?", (username,))
-    result = cursor.fetchone()
-
-    if result is not None:
-        # User exists, increment the login count
-        current_count = result[0] if result[0] is not None else 0
-        new_count = current_count + 1
-        cursor.execute("UPDATE LoginDetails SET logins = ? WHERE username = ?", (new_count, username))
-
-    # Commit the changes and close the connection
+    cursor.execute("SELECT logins FROM LoginDetails WHERE username=?", (username,))
+    login_count = cursor.fetchone()
+    new_login_count = int(login_count[0]) + 1
+    cursor.execute("UPDATE LoginDetails SET logins=? WHERE username=?", (new_login_count, username))
     conn.commit()
     conn.close()
+    return None
 
 @app.route('/', methods=["GET","POST"])
 def index():
@@ -111,26 +105,26 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         hashed_password = hash_password(password)
-        
+
         conn = sqlite3.connect('school.db')
         cursor = conn.cursor()
         check_query = cursor.execute("SELECT passkey FROM LoginDetails WHERE username=?", (username,))
         matching_password = cursor.fetchone()
         conn.close()
-        
+        print(matching_password)
         if matching_password is None:
             return render_template("login.html")
         stored_password = matching_password[0]
+        print(hashed_password)
+        print(stored_password)
         if str(hashed_password) != str(stored_password):
             return render_template("login.html")
         session['logged_in'] = True
         session['username'] = username
         update_login_count("school.db",username)
-        if get_login_count(username) == 1:
-            return redirect(url_for("change"))
-            
+
         return redirect(url_for("index"))
-        
+
     return render_template("login.html")
 
 @app.route('/reset_password', methods=["GET","POST"])
@@ -139,6 +133,9 @@ def reset():
         username = request.form.get("username")
         password = request.form.get("password1")
         confirm_password = request.form.get("password2")
+        if any(x is None for x in [username, password, confirm_password]):
+            print("Missing password or username")
+            return render_template("reset.html")
         if password != confirm_password:
             return render_template("reset.html")
         hashed_password = hash_password(password)
@@ -152,30 +149,11 @@ def reset():
         return redirect(url_for("index"))
     return render_template("reset.html")
 
-@app.route('/change_password', methods=["GET","POST"])
-def change():
-    if not session.get('logged_in'):
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        new_password = request.form.get("firstpassword1")
-        confirm_password = request.form.get("firstpassword2")
-
-        if new_password != confirm_password:
-            return render_template("change.html")
-
-        hashed_password = hash_password(new_password)
-        username = session.get('username')
-
-        conn = sqlite3.connect('school.db')
-        cursor = conn.cursor()
-        cursor.execute("UPDATE LoginDetails SET passkey=? WHERE username=?", 
-                   (hashed_password, username))
-        conn.commit()
-        conn.close()
-
-        return redirect(url_for("index"))
-    return render_template("change.html")
+app.route("/logout")
+def logout():
+    session.pop('logged_in', None)
+    session.pop('username', None)
+    return redirect(url_for('login'))
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)
