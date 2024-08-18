@@ -57,7 +57,7 @@ def acceptable_password(password):
 def get_login_count(username):
     conn = sqlite3.connect('school.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT login_count FROM LoginDetails WHERE username=?", (username,))
+    cursor.execute("SELECT logins FROM LoginDetails WHERE username=?", (username,))
     login_count = cursor.fetchone()
     conn.close()
     if login_count:
@@ -70,14 +70,14 @@ def update_login_count(db_path, username):
     cursor = conn.cursor()
 
     # Check if user exists
-    cursor.execute("SELECT login_count FROM LoginDetails WHERE username = ?", (username,))
+    cursor.execute("SELECT logins FROM LoginDetails WHERE username = ?", (username,))
     result = cursor.fetchone()
 
     if result is not None:
         # User exists, increment the login count
         current_count = result[0] if result[0] is not None else 0
         new_count = current_count + 1
-        cursor.execute("UPDATE LoginDetails SET login_count = ? WHERE username = ?", (new_count, username))
+        cursor.execute("UPDATE LoginDetails SET logins = ? WHERE username = ?", (new_count, username))
 
     # Commit the changes and close the connection
     conn.commit()
