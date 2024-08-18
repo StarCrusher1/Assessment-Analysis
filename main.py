@@ -26,6 +26,7 @@ def get_subtable_info(db_path, username):
         results.extend(rows)
 
     conn.close()
+    print(f"Username: {username},results: {results}")
     return results
 
 def hash_password(password): # converts password to sha256
@@ -98,28 +99,23 @@ def index():
 
 @app.route('/login', methods=["GET","POST"])
 def login():
-    # checks the details entered
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
         hashed_password = hash_password(password)
+
         conn = sqlite3.connect('school.db')
         cursor = conn.cursor()
-        if any(x is None for x in [username, password]):
-            print("Missing password or username")
-            return render_template("login.html")
         check_query = cursor.execute("SELECT passkey FROM LoginDetails WHERE username=?", (username,))
         matching_password = cursor.fetchone()
         conn.close()
+
         if matching_password is None:
             return render_template("login.html")
         stored_password = matching_password[0]
-        if str(hashed_password) != str(stored_password):
+        if hashed_password != stored_password:
             return render_template("login.html")
         session['logged_in'] = True
-        session['username'] = username
-        update_login_count("school.db",username)
-
         return redirect(url_for("index"))
 
     return render_template("login.html")
@@ -146,11 +142,13 @@ def reset():
         return redirect(url_for("index"))
     return render_template("reset.html")
 
-app.route("/logout", methods=["GET","POST"])
+@app.route("/logout", methods=["GET","POST"])
 def logout():
     session.pop('logged_in', None)
     session.pop('username', None)
+    session.clear()
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=5000, debug=True)
+  app.run(host='0.0.0.0', port=5012, debug=True)
+
