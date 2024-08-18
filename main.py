@@ -149,7 +149,7 @@ def reset():
         return redirect(url_for("index"))
     return render_template("reset.html")
 
-app.route("/logout")
+app.route("/logout", methods=["GET","POST"])
 def logout():
     session.pop('logged_in', None)
     session.pop('username', None)
