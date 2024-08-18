@@ -121,7 +121,7 @@ def login():
         if matching_password is None:
             return render_template("login.html")
         stored_password = matching_password[0]
-        if hashed_password != stored_password:
+        if str(hashed_password) != str(stored_password):
             return render_template("login.html")
         session['logged_in'] = True
         session['username'] = username
