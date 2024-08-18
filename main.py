@@ -9,12 +9,10 @@ def get_subtable_info(db_path, username):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # Retrieve all table names
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'Qn%'")
     tables = cursor.fetchall()
 
-    # Filter tables starting with 'Qn'
-    qn_tables = [table[0] for table in tables if table[0].startswith('Qn')]
+    qn_tables = [table[0] for table in tables]
 
     results = []
 
@@ -22,8 +20,8 @@ def get_subtable_info(db_path, username):
         # Query each table for the given username
         query = f"SELECT * FROM {table} WHERE username = ?"
         cursor.execute(query, (username,))
-        rows = cursor.fetchall()
-        results.extend(rows)
+        row = cursor.fetchall()
+        results.extend(row)
 
     conn.close()
     print(f"Username: {username},results: {results}")
@@ -103,7 +101,9 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
         hashed_password = hash_password(password)
-
+        if any(x is None for x in [username, password]):
+            print("Missing password or username")
+            return render_template("login.html")
         conn = sqlite3.connect('school.db')
         cursor = conn.cursor()
         check_query = cursor.execute("SELECT passkey FROM LoginDetails WHERE username=?", (username,))
@@ -116,6 +116,7 @@ def login():
         if hashed_password != stored_password:
             return render_template("login.html")
         session['logged_in'] = True
+        session['username'] = username
         return redirect(url_for("index"))
 
     return render_template("login.html")
