@@ -168,7 +168,7 @@ def reset():
         confirm_password = request.form.get("password2")
         if password != confirm_password:
             return render_template("reset.html")
-        hashed_password = hash_password(new_password)
+        hashed_password = hash_password(password)
         conn = sqlite3.connect('school.db')
         cursor = conn.cursor()
         cursor.execute("UPDATE LoginDetails SET passkey=? WHERE username=?", 
